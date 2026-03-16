@@ -524,7 +524,7 @@
     <a href="https://www.facebook.com/profile.php?id=61579574671921" target="_blank" class="nav-fb" title="Facebook">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
     </a>
-    <a href="mailto:klubplzenak@gmail.com" class="nav-cta">Napiš nám ✉️</a>
+    <button onclick="openContactModal()" class="nav-cta" style="border:none;cursor:pointer;">Napiš nám ✉️</button>
   </div>
 </nav>
 
@@ -713,9 +713,9 @@
     <div class="section-title">Napiš nám!</div>
     <div class="section-line"></div>
     <p>Máš nápad, co bychom měli v Plzni podniknout jako první?<br>Chceš se přidat nebo se jen zeptat? Šup s tím do mailu – odpovíme rádi!</p>
-    <a href="mailto:klubplzenak@gmail.com" class="contact-email">
-      ✉️ klubplzenak@gmail.com
-    </a>
+    <button onclick="openContactModal()" class="contact-email" style="border:none;cursor:pointer;">
+      ✉️ Napiš nám
+    </button>
   </div>
 </section>
 
@@ -1132,6 +1132,122 @@ document.addEventListener('DOMContentLoaded', renderGalleries);
   // Spustit po načtení stránky
   document.addEventListener('DOMContentLoaded', updateEventStatus);
 })();
+</script>
+
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="contactModal" onclick="if(event.target===this)closeContactModal()">
+  <div class="modal-box" style="max-width:480px;">
+    <button class="modal-close" onclick="closeContactModal()">✕</button>
+    <div class="modal-event-title" style="font-size:1.4rem;">✉️ Napiš nám</div>
+    <div style="color:#5a6a7a;margin-bottom:1.5rem;font-size:0.92rem;">Máš dotaz, nápad nebo chceš víc info? Ozvi se!</div>
+
+    <div id="contactForm">
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-weight:800;margin-bottom:5px;color:var(--dark);">Jméno *</label>
+        <input id="cf-name" type="text" placeholder="Tvoje jméno..." style="width:100%;padding:10px 14px;border:2px solid #d0e0f0;border-radius:10px;font-size:1rem;font-family:inherit;box-sizing:border-box;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='#d0e0f0'">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-weight:800;margin-bottom:5px;color:var(--dark);">Dotaz / zpráva *</label>
+        <textarea id="cf-message" placeholder="Co tě zajímá?" rows="4" style="width:100%;padding:10px 14px;border:2px solid #d0e0f0;border-radius:10px;font-size:1rem;font-family:inherit;box-sizing:border-box;outline:none;resize:vertical;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='#d0e0f0'"></textarea>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;color:var(--dark);">
+          <input id="cf-anonymous" type="checkbox" style="width:20px;height:20px;cursor:pointer;accent-color:var(--blue);" onchange="toggleEmail()">
+          🕵️ Ptám se anonymně
+        </label>
+      </div>
+      <div id="cf-email-wrap" style="margin-bottom:1.5rem;">
+        <label style="display:block;font-weight:800;margin-bottom:5px;color:var(--dark);">Tvůj email <span style="font-weight:400;color:#888;">(nepovinné – pro odpověď)</span></label>
+        <input id="cf-email" type="email" placeholder="tvuj@email.cz" style="width:100%;padding:10px 14px;border:2px solid #d0e0f0;border-radius:10px;font-size:1rem;font-family:inherit;box-sizing:border-box;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='#d0e0f0'">
+      </div>
+      <div id="cf-error" style="color:#e74c3c;font-size:0.85rem;margin-bottom:0.8rem;display:none;font-weight:700;"></div>
+      <button onclick="submitContact()" id="cf-submit" class="btn-primary" style="width:100%;border:none;cursor:pointer;font-size:1rem;padding:14px;">
+        ✉️ Odeslat zprávu
+      </button>
+    </div>
+
+    <div id="contactSuccess" style="display:none;text-align:center;padding:1.5rem 0;">
+      <div style="font-size:3rem;">📬</div>
+      <div style="font-family:'Paytone One',sans-serif;font-size:1.3rem;color:var(--blue);margin:0.5rem 0;">Zpráva odeslána!</div>
+      <div style="color:#3a4a5a;font-size:0.95rem;">Díky! Ozveme se co nejdříve. 😊</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Contact modal ────────────────────────────────────────
+  // EMAILJS – pro kontaktní formulář vytvoř novou šablonu:
+  // Proměnné: {{from_name}}, {{message}}, {{reply_email}}
+  const CONTACT_TEMPLATE_ID = 'template_yu1erjq'; // <-- sem doplň ID nové šablony
+
+  function openContactModal() {
+    document.getElementById('contactModal').classList.add('open');
+    document.getElementById('contactForm').style.display = 'block';
+    document.getElementById('contactSuccess').style.display = 'none';
+    document.getElementById('cf-error').style.display = 'none';
+    document.getElementById('cf-name').value = '';
+    document.getElementById('cf-message').value = '';
+    document.getElementById('cf-email').value = '';
+    document.getElementById('cf-anonymous').checked = false;
+    document.getElementById('cf-email-wrap').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeContactModal() {
+    document.getElementById('contactModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function toggleEmail() {
+    const anon = document.getElementById('cf-anonymous').checked;
+    const wrap = document.getElementById('cf-email-wrap');
+    wrap.style.transition = 'opacity 0.3s';
+    if (anon) {
+      wrap.style.opacity = '0';
+      setTimeout(() => { wrap.style.display = 'none'; }, 300);
+    } else {
+      wrap.style.display = 'block';
+      setTimeout(() => { wrap.style.opacity = '1'; }, 10);
+    }
+  }
+
+  function submitContact() {
+    const name = document.getElementById('cf-name').value.trim();
+    const message = document.getElementById('cf-message').value.trim();
+    const anon = document.getElementById('cf-anonymous').checked;
+    const email = anon ? 'Anonymní' : (document.getElementById('cf-email').value.trim() || 'Neuvedeno');
+    const errEl = document.getElementById('cf-error');
+
+    if (!name) {
+      errEl.textContent = '⚠️ Prosím vyplňte jméno.';
+      errEl.style.display = 'block'; return;
+    }
+    if (!message) {
+      errEl.textContent = '⚠️ Prosím napište zprávu.';
+      errEl.style.display = 'block'; return;
+    }
+    errEl.style.display = 'none';
+
+    const btn = document.getElementById('cf-submit');
+    btn.textContent = '⏳ Odesílám...';
+    btn.disabled = true;
+
+    emailjs.send(EMAILJS_SERVICE_ID, CONTACT_TEMPLATE_ID, {
+      from_name: name,
+      message: message,
+      reply_email: email,
+    }).then(() => {
+      document.getElementById('contactForm').style.display = 'none';
+      document.getElementById('contactSuccess').style.display = 'block';
+    }).catch((err) => {
+      console.error('EmailJS error:', err);
+      errEl.textContent = '⚠️ Chyba při odesílání. Zkuste prosím napsat přímo na klubplzenak@gmail.com';
+      errEl.style.display = 'block';
+      btn.textContent = '✉️ Odeslat zprávu';
+      btn.disabled = false;
+    });
+  }
 </script>
 
 </body>
