@@ -538,7 +538,7 @@
     <span class="next-event-date">21. 3. 2026 · 14:00</span>
     <span class="next-event-sep">·</span>
     <span class="next-event-place">📍 Sraz U Ježíška</span>
-    <button onclick="openSignupModal()" class="next-event-cta" style="border:none;cursor:pointer;">Přihlásit se →</button>
+    <span id="banner-days-label" style="font-weight:900;opacity:0.9;"></span><button id="banner-signup-btn" onclick="openSignupModal()" class="next-event-cta" style="border:none;cursor:pointer;">Přihlásit se →</button>
   </div>
 </div>
 
@@ -595,9 +595,9 @@
           <span>📍 Sraz U Ježíška</span>
         </div>
         <p class="upcoming-desc">Pojďte s námi na procházku podél řeky Úslavy – krásná trasa pro rodiny s kočárky i bez. Těšíme se na vás!</p>
-        <button onclick="openSignupModal()" class="btn-primary" style="margin-top:0.8rem;font-size:0.9rem;padding:10px 22px;border:none;cursor:pointer;">✉️ Přihlásit se</button>
+        <button id="card-signup-btn" onclick="openSignupModal()" class="btn-primary" style="margin-top:0.8rem;font-size:0.9rem;padding:10px 22px;border:none;cursor:pointer;">✉️ Přihlásit se</button>
       </div>
-      <div class="upcoming-badge">BRZY!</div>
+      <div class="upcoming-badge" id="event-badge">BRZY!</div>
     </div>
   </div>
 </section>
@@ -1042,6 +1042,96 @@ document.addEventListener('DOMContentLoaded', renderGalleries);
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeSignupModal();
   });
+</script>
+
+
+<script>
+// ── Automatický štítek akce ────────────────────────────────
+(function() {
+  // DATUM AKCE – změň zde při nové akci (rok, měsíc-1, den, hodina, minuta)
+  const EVENT_DATE = new Date(2026, 2, 21, 14, 0); // 21.3.2026 14:00
+
+  function updateEventStatus() {
+    const now = new Date();
+    const diffMs = EVENT_DATE - now;
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    const badge = document.getElementById('event-badge');
+    const bannerDays = document.getElementById('banner-days-label');
+    const bannerBtn = document.getElementById('banner-signup-btn');
+    const cardBtn = document.getElementById('card-signup-btn');
+
+    let badgeText = '';
+    let badgeColor = '';
+    let bannerLabel = '';
+    let showBtn = true;
+
+    if (diffMs < 0) {
+      // Akce proběhla
+      badgeText = 'PROBĚHLO';
+      badgeColor = '#999';
+      bannerLabel = '✅ Proběhlo';
+      showBtn = false;
+    } else if (diffDays === 0) {
+      // Dnes!
+      badgeText = '🔴 DNES!';
+      badgeColor = '#e74c3c';
+      bannerLabel = '🔴 DNES!';
+    } else if (diffDays === 1) {
+      // Zítra
+      badgeText = '🟠 ZÍTRA!';
+      badgeColor = '#e67e22';
+      bannerLabel = '🟠 ZÍTRA!';
+    } else if (diffDays <= 7) {
+      // Tento týden
+      badgeText = '🟡 ZA ' + diffDays + ' DNÍ';
+      badgeColor = '#f5a623';
+      bannerLabel = '🟡 za ' + diffDays + ' dní';
+    } else {
+      // Brzy
+      badgeText = '🟢 BRZY!';
+      badgeColor = '#5cb85c';
+      bannerLabel = '';
+    }
+
+    if (badge) {
+      badge.textContent = badgeText;
+      badge.style.background = badgeColor;
+      if (diffMs < 0) {
+        badge.style.animation = 'none';
+        badge.style.opacity = '0.6';
+      }
+    }
+
+    if (bannerDays) {
+      bannerDays.textContent = bannerLabel;
+    }
+
+    if (bannerBtn) {
+      bannerBtn.style.display = showBtn ? '' : 'none';
+      if (!showBtn) bannerBtn.replaceWith(Object.assign(document.createElement('span'), {
+        style: 'font-weight:900;opacity:0.85;',
+        textContent: 'Akce proběhla'
+      }));
+    }
+
+    if (cardBtn) {
+      cardBtn.style.display = showBtn ? '' : 'none';
+      if (!showBtn) {
+        cardBtn.style.background = '#999';
+        cardBtn.style.cursor = 'default';
+        cardBtn.disabled = true;
+        cardBtn.textContent = '✅ Akce proběhla';
+      }
+    }
+
+    // Aktualizuj každou minutu
+    setTimeout(updateEventStatus, 60000);
+  }
+
+  // Spustit po načtení stránky
+  document.addEventListener('DOMContentLoaded', updateEventStatus);
+})();
 </script>
 
 </body>
